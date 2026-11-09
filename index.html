@@ -1,20 +1,513 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="ro">
 <head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="theme-color" content="#6548e8">
-  <meta name="description" content="Un joc distractiv care te ajută să înveți puterile pas cu pas.">
-  <title>Puteri în Joacă — misiunea matematică</title>
-  <link rel="stylesheet" href="styles.css">
-  <script src="app.js" defer></script>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Puterea Dragonului</title>
+<style>
+  :root{--bg:#1b1b3a;--card:#2a2a5a;--accent:#ffb703;--ok:#2ec4b6;--bad:#ef476f;--soft:#c9c9f0}
+  *{box-sizing:border-box}
+  body{margin:0;font-family:"Trebuchet MS",system-ui,sans-serif;background:radial-gradient(circle at 50% 0,#33336e,var(--bg));color:#fff;min-height:100vh;display:flex;justify-content:center;overflow-x:hidden}
+  #app{width:100%;max-width:560px;padding:14px}
+  h1{text-align:center;font-size:2rem;margin:6px 0}
+  h2{margin:6px 0}
+  .dragon{font-size:5rem;text-align:center;animation:bob 2s ease-in-out infinite}
+  @keyframes bob{50%{transform:translateY(-8px)}}
+  .card{background:var(--card);border-radius:18px;padding:16px;margin:10px 0;box-shadow:0 4px 0 #0003;animation:slideIn .4s ease-out}
+  @keyframes slideIn{from{transform:translateY(24px);opacity:0}}
+  button{font:inherit;cursor:pointer;border:0;border-radius:14px;padding:14px 18px;background:var(--accent);color:#222;font-weight:700;font-size:1.1rem;box-shadow:0 4px 0 #b8800a;transition:transform .12s}
+  button:hover:not(:disabled){transform:scale(1.03)}
+  button:active{transform:translateY(3px);box-shadow:0 1px 0 #b8800a}
+  button.sec{background:#4a4a8a;color:#fff;box-shadow:0 4px 0 #2c2c60}
+  button:disabled{opacity:.45;cursor:default}
+  .full{width:100%;margin-top:12px}
+  .pulse:not(:disabled){animation:pulse 1.3s infinite}
+  @keyframes pulse{0%,100%{box-shadow:0 4px 0 #b8800a,0 0 0 0 #ffb70088}50%{box-shadow:0 4px 0 #b8800a,0 0 0 12px #ffb70000}}
+  .lvl{display:flex;gap:12px;align-items:center;width:100%;text-align:left;margin:10px 0;animation:slideIn .5s backwards}
+  .lvl:nth-of-type(2){animation-delay:.1s}.lvl:nth-of-type(3){animation-delay:.2s}.lvl:nth-of-type(4){animation-delay:.3s}
+  .lvl small{display:block;font-weight:400;font-size:.85rem}
+  .lvl .ico{font-size:2rem;display:inline-block;animation:bob 2.4s ease-in-out infinite}
+  .lvl .st{margin-left:auto;white-space:nowrap}
+  .bar{display:flex;justify-content:space-between;align-items:center;font-size:1.2rem;margin-bottom:6px}
+  .prog{height:10px;border-radius:6px;background:#0004;overflow:hidden;margin-bottom:10px}
+  .prog>div{height:100%;background:var(--accent);transition:width .6s}
+  .q{font-size:1.9rem;text-align:center;margin:12px 0;line-height:1.35}
+  .q small{display:block;font-size:1.05rem;color:var(--soft);margin-top:4px}
+  .opts{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:10px}
+  .opts button{background:#fff;color:#222;box-shadow:0 4px 0 #aaa;font-size:1.4rem;animation:slideIn .4s backwards}
+  .opts button:nth-child(2){animation-delay:.07s}.opts button:nth-child(3){animation-delay:.14s}.opts button:nth-child(4){animation-delay:.21s}
+  .opts button.good{background:var(--ok);color:#fff;box-shadow:0 4px 0 #1a8a80;animation:jump .6s}
+  .opts button.bad{background:var(--bad);color:#fff;box-shadow:0 4px 0 #a02848}
+  @keyframes jump{30%{transform:translateY(-14px) scale(1.08)}60%{transform:translateY(0) scale(.97)}}
+  .fb{margin-top:12px;padding:12px;border-radius:12px;background:#0004;color:var(--soft);line-height:1.5;animation:slideIn .4s}
+  .fb b{color:#fff}
+  .center{text-align:center}
+  .big{font-size:3rem}
+  .say{display:flex;gap:10px;align-items:flex-start;margin:6px 0 10px}
+  .say .face{font-size:2.4rem;animation:talk 1.1s ease-in-out infinite}
+  @keyframes talk{0%,100%{transform:rotate(-6deg)}50%{transform:rotate(6deg) translateY(-4px)}}
+  .say .bubble{background:#fff;color:#222;border-radius:16px;padding:10px 14px;font-size:1.1rem;line-height:1.45;flex:1;animation:bubble .5s}
+  @keyframes bubble{from{transform:scale(.7);opacity:0;transform-origin:left top}}
+  .say .bubble b{color:#7a3df0}
+
+  /* ---- foaia de hârtie îndoită ---- */
+  .row{margin:8px 0;padding:10px 8px;border-radius:12px;background:#0003;animation:rowIn .45s backwards;animation-delay:var(--rd,0ms)}
+  @keyframes rowIn{from{transform:translateX(-30px);opacity:0}}
+  .row .lab{font-size:.95rem;color:var(--soft);margin-bottom:2px;text-align:center}
+  .row .lab b{color:#fff}
+  .chips{display:flex;align-items:center;justify-content:center;gap:6px;flex-wrap:wrap;font-size:1.25rem;margin:2px 0 6px}
+  .chip{display:inline-block;min-width:1.9em;text-align:center;border-radius:9px;padding:1px 9px;font-weight:800;color:#222;background:var(--c)}
+  .cap{font-size:.9rem;color:var(--soft);text-align:center;margin:2px 0 8px}
+  .cap b{color:#fff}
+  .duo{display:flex;gap:14px;align-items:flex-end;justify-content:center}
+  .side{display:flex;flex-direction:column;align-items:center;min-width:0}
+  .side.stk{flex:none;width:84px}
+  .side.unf{flex:1}
+  .side small{font-size:.8rem;color:var(--soft);margin-top:6px;text-align:center}
+  .layers{display:flex;flex-direction:column;gap:1px;width:74px;padding:3px;border-radius:6px;background:#0003}
+  .layer{display:block;background:#fff;border-radius:2px;box-shadow:0 1px 0 #0005;animation:layerIn .5s backwards}
+  .layer:nth-child(even){background:#dcdcf2}
+  @keyframes layerIn{from{transform:translateY(-40px) scaleX(.3);opacity:0}}
+  .nest{display:flex;justify-content:center;margin:0}
+  .nb{position:relative;display:inline-flex;flex-wrap:wrap;justify-content:center;gap:4px;padding:5px;margin:1px;border:2px solid var(--c);border-radius:12px;background:#ffffff0d;background:color-mix(in srgb,var(--c) 16%,transparent);font-size:1.2rem;animation:boxIn .5s backwards;animation-delay:var(--rd,0ms)}
+  .nb.sm{font-size:.95rem;gap:2px;padding:3px}
+  @keyframes boxIn{from{transform:scale(.4);opacity:0}}
+  .nb.leaf::after{content:"✨";position:absolute;left:50%;top:-6px;font-size:1.1rem;opacity:0;pointer-events:none;animation:sparkle .9s backwards;animation-delay:var(--rd,0ms)}
+  @keyframes sparkle{0%{opacity:0;transform:translate(-50%,10px) scale(.2)}40%{opacity:1;transform:translate(-50%,-8px) scale(1.4)}100%{opacity:0;transform:translate(-50%,-22px) scale(.8)}}
+  .sheet{display:inline-block;width:.95em;height:1.35em;background:#fff;border-radius:2px;box-shadow:0 1px 0 #0006}
+  .egg{animation:split .8s cubic-bezier(.3,1.6,.5,1) backwards}
+  @keyframes split{
+    0%{transform:translateX(var(--sx,0)) scale(.1) rotate(-200deg);opacity:0}
+    55%{transform:translateX(0) scale(1.5) rotate(15deg);opacity:1}
+    100%{transform:none}}
+  .row.still,.row.still *,.row.still *::after{animation:none!important}
+  .row.zap .sheet,.row.zap .layers{animation:wiggle .14s 5;filter:drop-shadow(0 0 8px gold)}
+  .row.zap::before{content:"📄 ➡️ 📄📄";display:block;text-align:center;animation:wand .7s}
+  @keyframes wiggle{0%,100%{transform:rotate(-8deg)}50%{transform:rotate(8deg) scale(1.1)}}
+  @keyframes wand{from{transform:translateX(-60px);opacity:0}to{transform:none;opacity:1}}
+  .sheet.hatch{animation:hatch .7s}
+  @keyframes hatch{0%{transform:scale(1)}30%{transform:scale(1.6) rotate(-12deg)}60%{transform:translateY(-14px) scale(1.25)}100%{transform:none}}
+
+  .eqn{text-align:center;font-size:1.5rem;margin:10px 0;min-height:40px}
+  .tag{display:inline-block;border-radius:10px;padding:2px 10px;font-weight:800}
+  .tag.b{background:var(--accent);color:#222}
+  .tag.e{background:#7a3df0;color:#fff}
+  .ctl{display:flex;gap:10px;justify-content:center;align-items:center;margin:8px 0;flex-wrap:wrap}
+  .ctl button{padding:6px 16px;font-size:1.3rem}
+  .ctl span.n{min-width:40px;text-align:center;font-size:1.5rem;font-weight:800}
+  .ctl span.l{min-width:170px}
+  .hint{color:var(--soft);font-size:.95rem;text-align:center}
+  .home{background:none;box-shadow:none;color:var(--soft);padding:6px 10px;font-size:1rem}
+  .hintbtn{background:#4a4a8a;color:#fff;box-shadow:0 4px 0 #2c2c60;font-size:1rem;padding:8px 14px;margin-top:6px}
+  .shake{animation:shake .4s}
+  @keyframes shake{20%{transform:translateX(-8px)}40%{transform:translateX(8px)}60%{transform:translateX(-5px)}80%{transform:translateX(5px)}}
+  sup{font-size:.6em}
+
+  .mascot{position:relative;font-size:2.4rem;display:inline-block;line-height:1;transition:transform .2s}
+  .mascot.happy{animation:happy .8s}
+  .mascot.sad{animation:shake .5s}
+  @keyframes happy{20%{transform:translateY(-22px) rotate(-10deg) scale(1.3)}50%{transform:translateY(0) rotate(10deg)}70%{transform:translateY(-12px) rotate(-6deg)}100%{transform:none}}
+  .puff{position:absolute;left:100%;top:30%;font-size:1.8rem;animation:fire 1s forwards;pointer-events:none}
+  @keyframes fire{from{transform:translateX(-10px) scale(.2);opacity:1}to{transform:translateX(50px) scale(1.6);opacity:0}}
+  .drop{position:absolute;left:60%;top:0;font-size:1.3rem;animation:drop 1s forwards;pointer-events:none}
+  @keyframes drop{from{transform:translateY(0);opacity:1}to{transform:translateY(30px);opacity:0}}
+
+  .confetti{position:fixed;top:-20px;width:10px;height:14px;z-index:99;animation:fall linear forwards;pointer-events:none}
+  @keyframes fall{to{transform:translateY(110vh) rotate(720deg)}}
+  .star{display:inline-block;animation:starIn .6s backwards cubic-bezier(.3,1.8,.5,1)}
+  @keyframes starIn{from{transform:scale(0) rotate(-180deg)}}
+  .trophy{display:inline-block;animation:happy 1.2s infinite}
+
+  @media (prefers-reduced-motion:reduce){*{animation-duration:.01ms!important;animation-iteration-count:1!important}}
+</style>
 </head>
 <body>
-  <header class="topbar"><a class="brand" href="#acasa"><span class="brand-mark">x<sup>n</sup></span><span>Puteri în Joacă</span></a><div class="top-stats"><span class="stat-chip">⭐ <b id="score">0</b></span><span class="stat-chip">🔥 <b id="streak">0</b></span></div></header>
-  <main id="acasa">
-    <section class="intro"><div class="intro-copy"><p class="eyebrow">JOC MATEMATIC • ÎNVAȚĂ ȘI JOACĂ-TE</p><h1>Puteri mari.<br><span>Pași mici.</span></h1><p class="intro-text">Pornește într-o aventură matematică! Învață puterile de la primele calcule până la trucuri istețe.</p><a class="jump-link" href="#joc">Hai să începem ↓</a></div><div class="mascot" role="img" aria-label="Bufniță prietenoasă"><div class="orbit"></div><div class="owl"><div class="eyes"><i></i><i></i></div><div class="beak"></div><div class="belly"></div></div><span class="float-power power-one">2<sup>3</sup></span><span class="float-power power-two">a<sup>m</sup></span><span class="float-star">✦</span></div></section>
-    <section class="game-shell" id="joc"><div class="section-heading"><div><p class="eyebrow">ALEGE-ȚI MISIUNEA</p><h2>Câte un nivel pe rând</h2></div><p class="progress-label" id="progress-label"></p></div><nav class="level-list" id="level-list" aria-label="Niveluri"></nav><div class="game-card"><div class="card-topline"><span class="level-tag" id="level-tag"></span><span class="question-count" id="question-count"></span></div><div class="progress-track" role="progressbar" aria-label="Progresul nivelului" aria-valuemin="0" aria-valuemax="5" aria-valuenow="0"><div class="progress-fill" id="progress-fill"></div></div><p class="level-description" id="level-description"></p><div class="question-area" id="question-area" aria-live="polite"><p class="question-label">Cât face?</p><div class="question" id="question"></div></div><form id="answer-form" class="answer-form"><label class="sr-only" for="answer">Scrie răspunsul</label><input id="answer" type="number" inputmode="numeric" placeholder="Răspunsul tău" required><button class="primary-button" id="check-button" type="submit">Verifică →</button></form><div class="action-row"><button class="hint-button" id="hint-button" type="button">💡 Arată-mi un pont</button><button class="next-button" id="next-button" type="button" hidden>Următoarea provocare →</button></div><p class="hint-box" id="hint-box" hidden></p><div class="feedback" id="feedback" role="status" hidden></div></div><p class="kindness-note">🌱 Greșelile fac parte din învățare. Încearcă din nou și vei reuși!</p></section>
-    <section class="cheat-sheet"><div class="cheat-heading"><p class="eyebrow">TRUCURI DE ȚINUT MINTE</p><h2>Puteri fără secrete</h2><p>O fițuică isteață pentru exploratorii matematicii.</p></div><div class="tip-grid"><article class="tip-card tip-purple"><span>🧱</span><h3>Ce înseamnă puterea?</h3><p><strong>a<sup>n</sup></strong> înseamnă că înmulțim baza <strong>a</strong> cu ea însăși de <strong>n</strong> ori.</p><div class="tip-example">3<sup>4</sup> = 3 × 3 × 3 × 3 = 81</div></article><article class="tip-card tip-yellow"><span>➕</span><h3>Înmulțim? Adunăm exponenții!</h3><p>Când bazele sunt la fel, păstrăm baza și adunăm exponenții.</p><div class="tip-example">a<sup>m</sup> × a<sup>n</sup> = a<sup>m+n</sup></div></article><article class="tip-card tip-blue"><span>➖</span><h3>Împărțim? Scădem exponenții!</h3><p>La aceeași bază, la împărțire scădem exponentul de jos.</p><div class="tip-example">a<sup>m</sup> ÷ a<sup>n</sup> = a<sup>m−n</sup></div></article><article class="tip-card tip-pink"><span>🎁</span><h3>Două reguli bonus</h3><p>Orice număr nenul la puterea 0 este 1. La putere a unei puteri, înmulțim exponenții.</p><div class="tip-example">a<sup>0</sup> = 1 • (a<sup>m</sup>)<sup>n</sup> = a<sup>m×n</sup></div></article></div></section>
-  </main><footer><span>Făcut cu 💜 și matematică</span><span>Tu ești mai puternic decât orice exponent!</span></footer><div id="celebration" class="celebration" aria-hidden="true"></div>
+<div id="app"></div>
+<script>
+const $ = s => document.querySelector(s);
+const app = $('#app');
+const rnd = (a,b) => Math.floor(Math.random()*(b-a+1))+a;
+const shuffle = a => { a=a.slice(); for(let i=a.length-1;i>0;i--){const j=rnd(0,i);[a[i],a[j]]=[a[j],a[i]];} return a; };
+const P = (b,e) => `${b}<sup>${e}</sup>`;
+const fmt = n => String(n).replace(/\B(?=(\d{3})+(?!\d))/g,' ');
+const pw = (b,e) => Math.pow(b,e);
+const state = { stars:[0,0,0,0] };
+const timers = [];
+const later = (fn,ms) => { const t = setTimeout(fn,ms); timers.push(t); return t; };
+const clearTimers = () => { while (timers.length) clearTimeout(timers.pop()); };
+const partsText = b => b===2 ? 'la jumătate (în 2 părți)' : b===3 ? 'în 3 părți, ca o scrisoare ✉️' : `în ${b} părți, ca un acordeon`;
+
+/* ---------- ANIMAȚII AJUTĂTOARE ---------- */
+function confetti(n = 60){
+  const colors = ['#ffb703','#2ec4b6','#ef476f','#7a3df0','#06d6a0','#fff'];
+  for (let i=0;i<n;i++){
+    const c = document.createElement('div');
+    c.className = 'confetti';
+    c.style.left = Math.random()*100 + 'vw';
+    c.style.background = colors[rnd(0,colors.length-1)];
+    c.style.animationDuration = (2 + Math.random()*2) + 's';
+    c.style.animationDelay = Math.random()*0.6 + 's';
+    c.style.borderRadius = Math.random()>.5 ? '50%' : '2px';
+    document.body.appendChild(c);
+    setTimeout(() => c.remove(), 4800);
+  }
+}
+function runCounts(root){
+  root.querySelectorAll('.cnt').forEach(el => {
+    if (el.closest('.still')) return;
+    const to = +el.dataset.n, delay = +(el.dataset.d||0) + 250, dur = 700;
+    el.textContent = '0';
+    later(() => {
+      const t0 = performance.now();
+      const tick = now => {
+        const p = Math.min(1,(now-t0)/dur);
+        el.textContent = fmt(Math.round(to*(1-Math.pow(1-p,3))));
+        if (p<1) requestAnimationFrame(tick);
+      };
+      requestAnimationFrame(tick);
+    }, delay);
+  });
+}
+function celebrate(root){   // foile sar pe rând de bucurie
+  const items = root.querySelectorAll('.row:last-child .sheet');
+  items.forEach((el,i) => later(() => { el.classList.remove('egg'); void el.offsetWidth; el.classList.add('hatch'); }, i*70));
+  return items.length*70 + 700;
+}
+function react(good){
+  const m = $('#mascot'); if (!m) return;
+  m.classList.remove('happy','sad'); void m.offsetWidth;
+  m.classList.add(good ? 'happy' : 'sad');
+  const f = document.createElement('span');
+  f.className = good ? 'puff' : 'drop';
+  f.textContent = good ? '🔥' : '💧';
+  m.appendChild(f);
+  later(() => f.remove(), 1000);
+}
+
+/* ---------- FOAIA ÎNDOITĂ, PAS CU PAS ---------- */
+// Fiecare îndoitură înmulțește numărul de straturi cu b.
+// Stânga: foaia îndoită (grămada de straturi). Dreapta: foaia desfăcută, cu liniile de îndoire colorate.
+// Numărul de îndoituri (culori) = exponentul.
+const COLORS = ['#ffd166','#06d6a0','#ff8fa3','#b79cff','#4cc9f0','#a7e07a'];
+const colorOf = d => COLORS[(d-1)%COLORS.length];
+function nest(b, k, d, ctr){
+  let inner;
+  if (d === k){
+    inner = Array.from({length:b}, (_,i) =>
+      `<span class="egg sheet" style="--sx:${(((b-1)/2)-i)*1.3}em;animation-delay:calc(var(--rd) + ${Math.min(ctr.n++*45,900)}ms)"></span>`).join('');
+  } else {
+    inner = Array.from({length:b}, () => nest(b,k,d+1,ctr)).join('');
+  }
+  return `<span class="nb${d===k?' leaf':''}${ctr.sm?' sm':''}" style="--c:${colorOf(d)}">${inner}</span>`;
+}
+function stackView(cnt){
+  const th = Math.max(3, Math.min(14, Math.floor(130/cnt)));
+  return `<span class="layers">${Array.from({length:cnt},(_,i) =>
+    `<span class="layer" style="height:${th}px;animation-delay:calc(var(--rd) + ${Math.min(i*35,700)}ms)"></span>`).join('')}</span>`;
+}
+// o.upto = până la ce îndoitură; o.anim = de la ce rând se animează; o.cascade = rândurile apar pe rând
+function stepsView(b, e, o = {}){
+  const upto = o.upto === undefined ? e : o.upto;
+  const anim = o.anim || 0;
+  const showVis = o.eggs !== false && pw(b,e) <= 64;
+  let html = '';
+  for (let k = 0; k <= upto; k++){
+    const cnt = pw(b,k);
+    const rd = o.cascade ? (k-anim)*650 : 0;
+    let lab, body = '';
+    if (k === 0){
+      lab = `<div class="lab">Începem cu o foaie întreagă: <b>1</b> strat</div>`;
+    } else {
+      const chips = Array.from({length:k}, (_,i) => `<span class="chip" style="--c:${colorOf(i+1)}">${b}</span>`).join('<span>×</span>');
+      lab = `<div class="lab">Îndoitura ${k}</div>
+        <div class="chips">${chips}<span>=</span><b class="cnt" data-n="${cnt}" data-d="${rd}">${fmt(cnt)}</b> <span>straturi</span></div>
+        <div class="cap">Foaia îndoită de <b>${k}</b> ${k===1?'dată':'ori'} = <b>${k}</b> ${k===1?'îndoitură colorată':'îndoituri colorate'}</div>`;
+    }
+    if (showVis){
+      const unfolded = k === 0
+        ? `<span class="nb leaf" style="--c:#c9c9f0"><span class="egg sheet" style="--sx:0em;animation-delay:var(--rd)"></span></span>`
+        : nest(b,k,1,{n:0,sm:cnt>16});
+      body = `<div class="duo">
+        <div class="side stk">${stackView(cnt)}<small>îndoită</small></div>
+        <div class="side unf"><div class="nest">${unfolded}</div><small>desfăcută: fiecare culoare = o îndoitură</small></div>
+      </div>`;
+    }
+    html += `<div class="row${k<anim?' still':''}" style="--rd:${Math.max(0,rd)}ms">${lab}${body}</div>`;
+  }
+  return html;
+}
+const factorsText = (b,e) => Array(e).fill(b).join(' × ');
+const times = k => k === 1 ? '1 dată' : `${k} ori`;
+const dragonSays = t => `<div class="say"><div class="face">🐲</div><div class="bubble">${t}</div></div>`;
+
+/* ---------- MENIU ---------- */
+function home(){
+  clearTimers();
+  const total = state.stars.reduce((a,b)=>a+b,0);
+  const lv = [
+    ['📄','Nivelul 1: Îndoaie foaia','Vezi cum se face o putere, pas cu pas'],
+    ['🔥','Nivelul 2: Numără straturile','Câte straturi are foaia îndoită?'],
+    ['✍️','Nivelul 3: Scrie ca putere','Povestea foii devine 3<sup>4</sup>'],
+    ['🐉','Nivelul 4: Dragonul Boss','Provocări mixte']
+  ];
+  app.innerHTML = `
+    <div class="dragon">🐉</div>
+    <h1>Puterea Dragonului</h1>
+    <p class="hint">Ajută dragonul să îndoaie hârtia! ⭐ ${total} / 12</p>
+    ${lv.map((l,i)=>`
+      <button class="lvl" data-i="${i}">
+        <span class="ico">${l[0]}</span>
+        <span>${l[1]}<small>${l[2]}</small></span>
+        <span class="st">${'⭐'.repeat(state.stars[i])}${'☆'.repeat(3-state.stars[i])}</span>
+      </button>`).join('')}`;
+  app.querySelectorAll('.lvl').forEach(b => b.onclick = () => { const i=+b.dataset.i; i===0 ? level1() : quiz(i); });
+}
+
+/* ---------- NIVELUL 1: ÎNDOAIE FOAIA (ghidat) ---------- */
+function level1(){
+  clearTimers();
+  const scenes = [
+    { b:2, e:3, intro:`Salut! Eu sunt dragonul și am o <b>foaie de hârtie</b> 📄 (1 strat).<br>Dacă o îndoim <b>la jumătate</b>, numărul de straturi se face <b>de 2 ori mai mare</b>. Fiecare îndoitură are culoarea ei. Apasă butonul!` },
+    { b:3, e:2, intro:`Acum îndoim foaia <b>în 3 părți, ca o scrisoare</b> ✉️. Fiecare îndoitură face straturile <b>de 3 ori</b> mai multe. O facem de <b>2 ori</b>.` }
+  ];
+  let s = 0;
+
+  const scene = () => {
+    clearTimers();
+    const {b,e,intro} = scenes[s];
+    let k = 0;
+    app.innerHTML = `
+      <button class="home" id="back">← Înapoi</button>
+      <div class="prog"><div style="width:${s/3*100}%"></div></div>
+      ${dragonSays(intro)}
+      <div class="card">
+        <div id="steps">${stepsView(b,e,{upto:0})}</div>
+        <button class="full pulse" id="magic">📄 Îndoaie foaia ${b===2?'la jumătate':`în ${b}`}</button>
+        <div id="after"></div>
+      </div>`;
+    $('#back').onclick = home;
+    $('#magic').onclick = () => {
+      $('#magic').disabled = true;
+      const rows = $('#steps').querySelectorAll('.row');
+      rows[rows.length-1].classList.add('zap');
+      later(() => {
+        k++;
+        $('#steps').innerHTML = stepsView(b,e,{upto:k, anim:k});
+        runCounts($('#steps'));
+        $('#steps').lastElementChild.scrollIntoView({behavior:'smooth',block:'nearest'});
+        if (k < e){
+          later(() => {
+            $('#after').innerHTML = `<div class="fb">Ai îndoit foaia de <b>${times(k)}</b>. Mai îndoaie-o de încă <b>${times(e-k)}</b>!</div>`;
+            $('#magic').disabled = false;
+          }, 1000);
+        } else {
+          later(() => {
+            const wait = celebrate($('#steps'));
+            confetti(40);
+            later(() => {
+              $('#after').innerHTML = `
+                <div class="fb">
+                  🎉 Super! Ai îndoit foaia de <b>${times(e)}</b>, deci ai <b>${factorsText(b,e)} = ${fmt(pw(b,e))}</b> straturi.<br><br>
+                  Dragonii scriu asta mai scurt: <b style="font-size:1.6rem">${P(b,e)}</b><br><br>
+                  <span class="tag b">${b}</span> se numește <b>baza</b>: de câte ori se înmulțesc straturile la o îndoitură.<br>
+                  <span class="tag e">${e}</span> se numește <b>exponentul</b>: de câte ori îndoi foaia, adică <b>câte îndoituri colorate</b> ai.
+                </div>
+                <button class="full" id="nx">${s<scenes.length-1?'Încă o îndoire ➡️':'Acum joacă liber! 🎮'}</button>`;
+              $('#nx').onclick = () => { s++; s < scenes.length ? scene() : free(); };
+              $('#nx').scrollIntoView({behavior:'smooth',block:'nearest'});
+            }, wait);
+          }, 1400);
+        }
+      }, 750);
+    };
+  };
+
+  const free = () => {
+    clearTimers();
+    let b = 2, e = 3;
+    app.innerHTML = `
+      <button class="home" id="back">← Înapoi</button>
+      <div class="prog"><div style="width:66%"></div></div>
+      ${dragonSays(`Acum tu îndoi foaia! Alege <b>în câte părți</b> o îndoi și <b>de câte ori</b>.`)}
+      <div class="card">
+        <div class="ctl"><span class="l"><span class="tag b">baza</span> în câte părți</span><button id="bm">−</button><span class="n" id="bv"></span><button id="bp">+</button></div>
+        <div class="ctl"><span class="l"><span class="tag e">exponentul</span> de câte ori</span><button id="em">−</button><span class="n" id="ev"></span><button id="ep">+</button></div>
+        <div class="eqn" id="eqn"></div>
+        <div id="steps"></div>
+      </div>
+      <button class="full" id="done">Gata, sunt pregătit! 🏁</button>`;
+    $('#back').onclick = home;
+    const redraw = () => {
+      clearTimers();
+      $('#bv').textContent = b; $('#ev').textContent = e;
+      $('#eqn').innerHTML = `${P(b,e)} = ${factorsText(b,e)} = <b class="cnt" data-n="${pw(b,e)}" data-d="0">${fmt(pw(b,e))}</b>`;
+      $('#steps').innerHTML = stepsView(b,e,{cascade:true});
+      runCounts($('#eqn')); runCounts($('#steps'));
+    };
+    $('#bm').onclick = () => { b = Math.max(2,b-1); redraw(); };
+    $('#bp').onclick = () => { b = Math.min(5,b+1); redraw(); };
+    $('#em').onclick = () => { e = Math.max(1,e-1); redraw(); };
+    $('#ep').onclick = () => { e = Math.min(4,e+1); redraw(); };
+    $('#done').onclick = () => {
+      clearTimers();
+      state.stars[0] = 3;
+      app.innerHTML = `<div class="card center"><div class="big trophy">📄➡️🐲</div><h2>Ai înțeles puterile!</h2>
+        <p style="font-size:1.15rem;line-height:1.5">O putere înseamnă că faci <b>aceeași înmulțire</b> de mai multe ori.<br><br>${P(3,2)} = 3 × 3 = 9</p>
+        <button class="full pulse" id="h">Continuă la nivelul 2 ➡️</button></div>`;
+      confetti(70);
+      $('#h').onclick = () => quiz(1);
+    };
+    redraw();
+  };
+  scene();
+}
+
+/* ---------- ÎNTREBĂRI ---------- */
+function uniq(correct, wrongs){
+  const s = shuffle([...new Set(wrongs.filter(w => w !== correct && w > 0))]).slice(0,3);
+  let k = 1; while (s.length < 3) { const c = correct + k; if (!s.includes(c)) s.push(c); k++; }
+  return s;
+}
+const VISUAL = [[2,2],[2,3],[2,4],[2,5],[3,2],[3,3],[4,2],[4,3],[5,2]];
+let pool2 = [], pool3 = [];
+const draw = (pool, src) => { if (!pool.length) pool.push(...shuffle(src)); return pool.pop(); };
+
+function qCount(){
+  const [b,e] = draw(pool2, VISUAL);
+  const ans = pw(b,e);
+  const opts = uniq(ans, [b*e, ans+b, pw(b,e-1), ans-b, b+e, pw(e,b), ans+1, ans+10]);
+  return {
+    q: `Îndoim foaia <b>${partsText(b)}</b>, de <b>${times(e)}</b>.<small>Adică ${P(b,e)}. Câte straturi are?</small>`,
+    correct: ans, options: shuffle([ans,...opts]), show: fmt,
+    hint: { b, e, upto: e-1 },
+    steps: { b, e },
+    explain: `${P(b,e)} = ${factorsText(b,e)} = <b>${fmt(ans)}</b> straturi.<br>Atenție: ${P(b,e)} <b>nu</b> înseamnă ${b} × ${e}!`
+  };
+}
+function qWrite(){
+  const [b,e] = draw(pool3, VISUAL);
+  const ans = `${b}^${e}`;
+  const wrongs = [`${e}^${b}`, `${b}^${e+1}`, `${b}^${e-1}`, `${b*e}`].filter(x => x !== ans && !x.endsWith('^1'));
+  const asWords = rnd(0,1) === 0;
+  return {
+    q: asWords
+      ? `Îndoim foaia în <b>${b}</b> părți, de <b>${times(e)}</b>.<small>Cum scriem asta ca putere?</small>`
+      : `${factorsText(b,e)} = ?<small>Cum scriem ca putere?</small>`,
+    correct: ans, options: shuffle([ans, ...shuffle(wrongs).slice(0,3)]),
+    show: s => s.includes('^') ? P(...s.split('^')) : s,
+    steps: asWords ? null : { b, e },
+    explain: `Numărul <span class="tag b">${b}</span> se repetă → <b>baza</b>.<br>Îndoim de <span class="tag e">${e}</span> ori → <b>exponentul</b>.<br>Deci scriem <b>${P(b,e)}</b>.`
+  };
+}
+function qBoss(){
+  const t = rnd(1,6);
+  if (t === 1 || t === 2){
+    const b = rnd(3,9), e = rnd(2,3), ans = pw(b,e);
+    const opts = uniq(ans,[b*e, ans+b, pw(b,e-1), ans-b, pw(e,b), ans+10]);
+    return { q:`${P(b,e)} = ?`, correct:ans, options:shuffle([ans,...opts]), show:fmt,
+      hint:{b,e,upto:e-1,eggs:false}, steps:{b,e,eggs:false},
+      explain:`${P(b,e)} = ${factorsText(b,e)} = <b>${fmt(ans)}</b>.` };
+  }
+  if (t === 3){
+    let b1,e1,b2,e2,v1,v2;
+    do { b1=rnd(2,6);e1=rnd(2,4);b2=rnd(2,6);e2=rnd(2,4);v1=pw(b1,e1);v2=pw(b2,e2);} while (b1===b2&&e1===e2);
+    const ans = v1>v2?'>':v1<v2?'<':'=';
+    return { q:`${P(b1,e1)} ? ${P(b2,e2)}<small>Care foaie are mai multe straturi?</small>`, correct:ans, options:['<','=','>'], show:s=>s, cols:3,
+      explain:`${P(b1,e1)} = ${fmt(v1)} și ${P(b2,e2)} = ${fmt(v2)}, deci ${fmt(v1)} ${ans} ${fmt(v2)}.` };
+  }
+  if (t === 4){
+    const e = rnd(2,6);
+    const opts = uniq(e,[e+1,e-1,e+2,e*10]);
+    return { q:`${P(10,e)} = 1 urmat de câte zerouri?`, correct:e, options:shuffle([e,...opts]), show:String,
+      explain:`Fiecare ×10 adaugă un 0. ${P(10,e)} = 1${'0'.repeat(e)}, deci are <b>${e}</b> zerouri.` };
+  }
+  if (t === 5){
+    const k = rnd(1,3);
+    if (k===1){ const b=rnd(2,99); return { q:`${P(b,1)} = ?<small>Îndoim o singură dată</small>`, correct:b, options:shuffle([b,b+1,b*2,1]), show:String,
+      explain:`Cu exponentul 1 ai doar ${b} o dată, deci ${P(b,1)} = ${b}.` }; }
+    if (k===2){ const e=rnd(2,50); return { q:`${P(1,e)} = ?<small>O foaie rămâne cu 1 strat, oricâte ori „o îndoim” în 1 parte!</small>`, correct:1, options:shuffle([1,e,0,2]), show:String,
+      explain:`1 × 1 × 1 × ... rămâne 1. Deci ${P(1,e)} = 1.` }; }
+    const e = rnd(2,9); return { q:`${P(0,e)} = ?<small>Dacă ai 0 straturi, câte rămân?</small>`, correct:0, options:shuffle([0,1,e,10]), show:String,
+      explain:`0 × 0 × 0 ... = 0. Deci ${P(0,e)} = 0.` };
+  }
+  const b = rnd(2,12), sq = b*b;
+  const opts = uniq(b,[b+1,b-1,b*2,b+2,b-2]);
+  return { q:`${P('?',2)} = ${sq}<small>Care număr înmulțit cu el însuși dă ${sq}?</small>`, correct:b, options:shuffle([b,...opts]), show:String,
+    explain:`${b} × ${b} = ${sq}, deci ${P(b,2)} = ${sq}.` };
+}
+
+/* ---------- MOTOR DE JOC ---------- */
+const META = {
+  1:{name:'Numără straturile',gen:qCount,icon:'🔥',n:8},
+  2:{name:'Scrie ca putere',gen:qWrite,icon:'✍️',n:8},
+  3:{name:'Dragonul Boss',gen:qBoss,icon:'🐉',n:10}
+};
+function quiz(i){
+  clearTimers();
+  const m = META[i];
+  if (i===1) pool2 = [];
+  if (i===2) pool3 = [];
+  let idx = 0, lives = 3, score = 0, locked = false;
+  const next = () => {
+    clearTimers();
+    if (idx >= m.n || lives <= 0) return end();
+    const q = m.gen(); locked = false;
+    app.innerHTML = `
+      <button class="home" id="back">← Înapoi</button>
+      <div class="bar"><span><span class="mascot" id="mascot">🐲</span> ${m.name}</span><span>${'❤️'.repeat(lives)}${'🖤'.repeat(3-lives)}</span></div>
+      <div class="prog"><div style="width:${idx/m.n*100}%"></div></div>
+      <div class="card">
+        <div class="q">${q.q}</div>
+        ${q.hint ? `<div class="center"><button class="hintbtn" id="hint">💡 Ajută-mă cu foaia</button></div><div id="hintbox"></div>` : ''}
+        <div class="opts" style="${q.cols?`grid-template-columns:repeat(${q.cols},1fr)`:''}">
+          ${q.options.map((o,k)=>`<button data-k="${k}">${q.show(o)}</button>`).join('')}
+        </div>
+        <div id="fb"></div>
+      </div>`;
+    $('#back').onclick = home;
+    if (q.hint) $('#hint').onclick = () => {
+      $('#hintbox').innerHTML = stepsView(q.hint.b,q.hint.e,{upto:q.hint.upto,eggs:q.hint.eggs,cascade:true});
+      runCounts($('#hintbox'));
+      $('#hint').style.display = 'none';
+    };
+    app.querySelectorAll('.opts button').forEach(btn => btn.onclick = () => {
+      if (locked) return; locked = true;
+      const ok = q.options[+btn.dataset.k] === q.correct;
+      app.querySelectorAll('.opts button').forEach(b => { if (q.options[+b.dataset.k] === q.correct) b.classList.add('good'); });
+      if (ok) score++; else { lives--; btn.classList.add('bad','shake'); }
+      react(ok);
+      idx++;
+      $('.prog > div').style.width = idx/m.n*100 + '%';
+      if (q.hint) { $('#hintbox').innerHTML = ''; $('#hint').style.display='none'; }
+      const view = q.steps ? stepsView(q.steps.b,q.steps.e,{eggs:q.steps.eggs,cascade:true}) : '';
+      $('#fb').innerHTML = `${view}<div class="fb">${ok?'✅ <b>Corect!</b> ':'❌ <b>Aproape!</b> '}${q.explain}</div>
+        <button class="full" id="nx">${(idx>=m.n||lives<=0)?'Vezi rezultatul':'Următoarea ➡️'}</button>`;
+      runCounts($('#fb'));
+      if (ok && idx===m.n) confetti(30);
+      $('#nx').onclick = next;
+      later(() => $('#nx') && $('#nx').scrollIntoView({behavior:'smooth',block:'nearest'}), 300);
+    });
+  };
+  const end = () => {
+    const win = lives > 0 && score >= m.n*0.5;
+    const stars = !win ? 0 : score===m.n ? 3 : score >= m.n*0.75 ? 2 : 1;
+    state.stars[i] = Math.max(state.stars[i], stars);
+    app.innerHTML = `
+      <div class="card center">
+        <div class="big ${stars?'trophy':''}">${stars===3?'🏆':stars>0?'🎉':'💪'}</div>
+        <h2>${stars>0?'Dragonul e mândru de tine!':'Mai încearcă, dragonul crede în tine!'}</h2>
+        <p style="font-size:1.4rem">${score} / ${m.n} corecte</p>
+        <p class="big">${[0,1,2].map(k=>`<span class="star" style="animation-delay:${.3+k*.35}s">${k<stars?'⭐':'☆'}</span>`).join('')}</p>
+        <button class="full" id="again">Încă o dată 🔁</button>
+        <button class="full sec" id="h">Meniu</button>
+      </div>`;
+    if (stars) confetti(stars*30);
+    $('#again').onclick = () => quiz(i);
+    $('#h').onclick = home;
+  };
+  next();
+}
+home();
+</script>
 </body>
 </html>
